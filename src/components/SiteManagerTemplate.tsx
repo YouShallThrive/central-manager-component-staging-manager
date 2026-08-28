@@ -660,7 +660,7 @@ export default function SiteManagerTemplate<T>(props: SiteManagerConfig<T>) {
           ) : (
             <RefreshCw className="size-4" />
           )}
-          {isSyncing ? "Syncing..." : "Sync from Rocket.net"}
+          {isSyncing ? "Syncing..." : "Sync"}
         </Button>
         </div>
       </div>
@@ -841,7 +841,7 @@ export default function SiteManagerTemplate<T>(props: SiteManagerConfig<T>) {
                     <p className="text-sm text-muted-foreground">
                       {search || accountFilter !== "all" || extraFilters?.some((f) => f.value !== "all")
                         ? "No sites match your filters"
-                        : `No sites yet. Click "Sync from Rocket.net" to pull site data.`}
+                        : `No sites yet. Click "Sync" to pull site data.`}
                     </p>
                   </div>
                 </td>

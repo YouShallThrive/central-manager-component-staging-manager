@@ -17,4 +17,13 @@ crons.cron(
   internal.syncAlerts.dailySyncCheck,
 );
 
+// Daily PHP version sweep — keeps phpVersion/phpCheckedAt fresh without
+// anyone clicking Sync. Staggered across the suite to spread Rocket.net load.
+crons.daily(
+  "daily-php-sweep",
+  { hourUTC: 9, minuteUTC: 20 },
+  internal.phpVersions.syncBatch,
+  { offset: 0 },
+);
+
 export default crons;
