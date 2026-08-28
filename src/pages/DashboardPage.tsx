@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Loader2, ShieldOff, CheckCircle2, Cpu, AlertTriangle } from "lucide-react";
 import { PhpVersionBadge, matchesPhpFilter, PHP_FILTER_OPTIONS, PHP_FILTER_ALL_LABEL } from "@/components/PhpVersionBadge";
-import { RocketStatusBadge, matchesRocketFilter, ROCKET_FILTER_OPTIONS, ROCKET_FILTER_ALL_LABEL } from "@/components/RocketStatusBadge";
+import { matchesRocketFilter, ROCKET_FILTER_OPTIONS, ROCKET_FILTER_ALL_LABEL } from "@/components/RocketStatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
