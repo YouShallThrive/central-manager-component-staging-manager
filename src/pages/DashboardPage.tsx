@@ -3,7 +3,7 @@ import { api } from "../../convex/_generated/api";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Loader2, ShieldOff, CheckCircle2, Cpu, AlertTriangle } from "lucide-react";
-import { PhpVersionBadge } from "@/components/PhpVersionBadge";
+import { PhpVersionBadge, matchesPhpFilter, PHP_FILTER_OPTIONS, PHP_FILTER_ALL_LABEL } from "@/components/PhpVersionBadge";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,7 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [accountFilter, setAccountFilter] = useState<string>("all");
+  const [phpFilter, setPhpFilter] = useState<string>("all");
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   // Track which sites are currently being deactivated (by site _id)
   const [deactivating, setDeactivating] = useState<Set<string>>(new Set());
@@ -278,6 +279,12 @@ export default function DashboardPage() {
       }
     : null;
 
+  const visibleSites = useMemo(() => {
+    if (!sites) return undefined;
+    if (phpFilter === "all") return sites;
+    return sites.filter((s) => matchesPhpFilter(s.phpVersion, phpFilter));
+  }, [sites, phpFilter]);
+
   const extraFilters: ExtraFilter[] = useMemo(() => [
     {
       key: "status",
@@ -292,7 +299,15 @@ export default function DashboardPage() {
       onChange: setStatusFilter,
       width: "w-[160px]",
     },
-  ], [statusFilter]);
+      {
+      key: "php",
+      allLabel: PHP_FILTER_ALL_LABEL,
+      options: PHP_FILTER_OPTIONS,
+      value: phpFilter,
+      onChange: setPhpFilter,
+      width: "w-[170px]",
+    },
+], [statusFilter, phpFilter]);
 
   // Per-row "Deactivate All" button
   const renderRowAction = useCallback((site: SiteDoc) => {
@@ -372,7 +387,7 @@ export default function DashboardPage() {
       fieldAccessors={fieldAccessors}
       extraColumns={extraColumns}
       extraFilters={extraFilters}
-      sites={sites ?? undefined}
+      sites={visibleSites ?? undefined}
       accounts={accounts}
       search={search}
       onSearchChange={setSearch}
