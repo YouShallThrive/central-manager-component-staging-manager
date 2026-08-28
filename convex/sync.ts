@@ -128,6 +128,14 @@ function categorizePlugin(
 }
 
 // Direct Rocket.net API call
+// Retry once on 401 — Rocket.net occasionally returns a transient 401 mid-sync.
+async function rocketFetch(url: string, init: RequestInit): Promise<Response> {
+  const resp = await fetch(url, init);
+  if (resp.status !== 401) return resp;
+  await new Promise((r) => setTimeout(r, 1500));
+  return await fetch(url, init);
+}
+
 async function rocketGet(
   token: string,
   path: string,
@@ -140,7 +148,7 @@ async function rocketGet(
     }
   }
 
-  const resp = await fetch(url.toString(), {
+  const resp = await rocketFetch(url.toString(), {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -150,12 +158,12 @@ async function rocketGet(
   if (!resp.ok) {
     if (resp.status === 401) {
       throw new Error(
-        "Rocket.net API token is invalid or expired. Please go to Settings and save a fresh token.",
+        `Sync error (401 from Rocket.net). Check the sync logs for details.`,
       );
     }
     if (resp.status === 403) {
       throw new Error(
-        "Rocket.net API token does not have permission for this request.",
+        `Sync error (403 from Rocket.net). Check the sync logs for details.`,
       );
     }
     const text = await resp.text();
@@ -168,7 +176,7 @@ async function rocketGet(
     } catch {
       // not JSON, use raw text
     }
-    throw new Error(`Rocket.net API error (${resp.status}). Please try again.`);
+    throw new Error(`Sync error (${resp.status} from Rocket.net). Check the sync logs for details.`);
   }
 
   return (await resp.json()) as Record<string, unknown>;

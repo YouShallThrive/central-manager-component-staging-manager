@@ -39,9 +39,9 @@ async function rocketPost(
   });
 
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("Rocket.net token expired.");
+    if (resp.status === 401) throw new Error("Sync error (401 from Rocket.net). Check the sync logs for details.");
     const text = await resp.text().catch(() => "");
-    throw new Error(`Rocket.net API error (${resp.status}): ${text.slice(0, 200)}`);
+    throw new Error(`Sync error (${resp.status} from Rocket.net). Check the sync logs for details: ${text.slice(0, 200)}`);
   }
 
   return (await resp.json()) as Record<string, unknown>;
