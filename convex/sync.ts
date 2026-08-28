@@ -605,12 +605,18 @@ export const syncEverything = action({
         }
       }
 
+      // PHP version is not in Rocket's site list — it needs one settings call
+      // per site, so the sweep runs as a background job after the main sync.
+      await ctx.scheduler.runAfter(0, internal.phpVersions.syncBatch, { offset: 0 });
+
       return { sitesSynced: totalSynced, sitesScanned: totalScanned, errors: totalErrors };
     }
 
     // Legacy fallback: single token in settings
     const token = await getToken(ctx);
-    return await doFullSync(ctx, token);
+    const legacy = await doFullSync(ctx, token);
+    await ctx.scheduler.runAfter(0, internal.phpVersions.syncBatch, { offset: 0 });
+    return legacy;
   },
 });
 
