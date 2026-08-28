@@ -31,6 +31,11 @@ const schema = defineSchema({
     phpVersion: v.optional(v.string()), // staging site PHP version
     productionPhpVersion: v.optional(v.string()), // production site PHP version
     phpCheckedAt: v.optional(v.number()), // timestamp of last PHP version check
+    // Rocket.net presence — set by the PHP/settings probe. Records are NEVER
+    // auto-deleted; a site missing from Rocket.net is flagged here and shown
+    // in the UI so a human decides whether to remove it.
+    rocketStatus: v.optional(v.string()), // "ok" | "missing" | "auth_error"
+    rocketMissingSince: v.optional(v.number()),
     status: v.union(
       v.literal("unprepped"),
       v.literal("prepped"),

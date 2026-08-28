@@ -69,6 +69,8 @@ export interface SiteDetailConfig {
   /** Quick stat cards */
   stats: QuickStatItem[];
   /** Environment-specific sections */
+  /** Banner slot, e.g. a "missing from Rocket.net" notice. */
+  notice?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -185,6 +187,7 @@ export default function SiteDetailTemplate(props: SiteDetailConfig) {
     onDismissSyncMessage,
     statuscake,
     stats,
+    notice,
     children,
   } = props;
 
@@ -258,6 +261,8 @@ export default function SiteDetailTemplate(props: SiteDetailConfig) {
           </div>
         )}
       </div>
+
+      {notice}
 
       {/* StatusCake Card */}
       {statuscake && <StatusCakeCard data={statuscake} />}

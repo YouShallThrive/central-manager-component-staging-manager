@@ -696,14 +696,15 @@ async function doFullSync(
         }
       }
 
-      // Phase 1b: Clean up stale entries (staging sites deleted/recreated on Rocket.net)
+      // Phase 1b: Flag entries missing from Rocket.net (never delete them —
+      // only a person removes a site record).
       const validStagingIds = siteIds.map((s) => s.stagingId);
-      const cleanup = await ctx.runMutation(internal.sites.deleteStaleSites, {
+      const cleanup = await ctx.runMutation(internal.sites.flagMissingSites, {
         validStagingIds,
         ...(accountId ? { accountId: accountId as any } : {}),
       });
 
-      const cleanupNote = cleanup.deleted > 0 ? `, removed ${cleanup.deleted} stale` : "";
+      const cleanupNote = cleanup.flagged > 0 ? `, ${cleanup.flagged} missing from Rocket.net` : "";
       await ctx.runMutation(internal.actionLogs.add, {
         action: "sync_sites",
         details: `Found ${sitesSynced} staging sites${cleanupNote}`,
@@ -828,9 +829,9 @@ export const autoSync = internalAction({
         }
       }
 
-      // Clean up stale entries
+      // Flag entries missing from Rocket.net (records are never auto-deleted)
       const validIds = siteEntries.map((s) => s.stagingId);
-      await ctx.runMutation(internal.sites.deleteStaleSites, { validStagingIds: validIds });
+      await ctx.runMutation(internal.sites.flagMissingSites, { validStagingIds: validIds });
 
       for (const { docId, stagingId } of siteEntries) {
         try {

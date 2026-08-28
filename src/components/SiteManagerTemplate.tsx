@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PhpVersionBadge } from "@/components/PhpVersionBadge";
+import { RocketStatusBadge } from "@/components/RocketStatusBadge";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -126,6 +127,10 @@ export interface SiteFieldAccessors<T> {
   secondaryPhpLabel?: string;
   /** Timestamp of last PHP version check */
   getPhpCheckedAt?: (site: T) => number | null | undefined;
+  /** Rocket.net presence: "ok" | "missing" | "auth_error" */
+  getRocketStatus?: (site: T) => string | null | undefined;
+  /** When the site was first seen missing from Rocket.net */
+  getRocketMissingSince?: (site: T) => number | null | undefined;
 }
 
 /** Standard stat values shown on every site manager */
@@ -478,7 +483,13 @@ function buildStandardColumns<T>(
       const link = acc.getDomainLink(site);
       return (
         <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-sm">{acc.getDomainLabel(site)}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm">{acc.getDomainLabel(site)}</span>
+            <RocketStatusBadge
+              status={acc.getRocketStatus?.(site) ?? undefined}
+              missingSince={acc.getRocketMissingSince?.(site) ?? undefined}
+            />
+          </div>
           {link && (
             <span className="text-xs text-muted-foreground font-mono flex items-center gap-1">
               <a

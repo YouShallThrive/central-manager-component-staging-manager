@@ -23,7 +23,16 @@ async function rocketFetch(url: string, init: RequestInit): Promise<Response> {
   return await fetch(url, init);
 }
 
-async function fetchPhpVersion(token: string, rocketSiteId: number): Promise<string | undefined> {
+export type RocketStatus = "ok" | "missing" | "auth_error";
+
+/**
+ * Probes a site's settings endpoint and classifies the outcome.
+ * 404 = gone from Rocket.net (flagged, never deleted); 401/403 = token problem.
+ */
+async function probeSite(
+  token: string,
+  rocketSiteId: number,
+): Promise<{ status: RocketStatus; version?: string }> {
   const resp = await rocketFetch(`${ROCKET_API_BASE}/sites/${rocketSiteId}/settings`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -32,16 +41,16 @@ async function fetchPhpVersion(token: string, rocketSiteId: number): Promise<str
   });
 
   if (!resp.ok) {
-    if (resp.status === 401) {
-      throw new Error(`Sync error (401 from Rocket.net) fetching settings for site ${rocketSiteId}. Check the sync logs for details.`);
-    }
-    if (resp.status === 404) return undefined;
-    throw new Error(`Rocket.net API error (${resp.status}) fetching settings for site ${rocketSiteId}`);
+    if (resp.status === 404) return { status: "missing" };
+    if (resp.status === 401 || resp.status === 403) return { status: "auth_error" };
+    throw new Error(
+      `Sync error (${resp.status} from Rocket.net) fetching settings for site ${rocketSiteId}. Check the sync logs for details.`,
+    );
   }
 
   const body = (await resp.json()) as { result?: { current_php_version?: string } };
   const version = body.result?.current_php_version;
-  return version ? String(version) : undefined;
+  return { status: "ok", version: version ? String(version) : undefined };
 }
 
 export const listForPhpSync = internalQuery({
@@ -62,14 +71,28 @@ export const setPhpVersions = internalMutation({
     siteId: v.id("sites"),
     phpVersion: v.optional(v.string()),
     productionPhpVersion: v.optional(v.string()),
+    rocketStatus: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.siteId, {
-      phpVersion: args.phpVersion,
-      productionPhpVersion: args.productionPhpVersion,
-      phpCheckedAt: Date.now(),
-    });
+    const site = await ctx.db.get(args.siteId);
+    const patch: Record<string, unknown> = { phpCheckedAt: Date.now() };
+
+    if (args.rocketStatus === "missing" || args.rocketStatus === "auth_error") {
+      // Unreadable on Rocket.net — keep the last known PHP versions and flag
+      // the record. Site records are never deleted automatically.
+      patch.rocketStatus = args.rocketStatus;
+      if (args.rocketStatus === "missing") {
+        patch.rocketMissingSince = site?.rocketMissingSince ?? Date.now();
+      }
+    } else {
+      patch.phpVersion = args.phpVersion;
+      patch.productionPhpVersion = args.productionPhpVersion;
+      patch.rocketStatus = "ok";
+      patch.rocketMissingSince = undefined;
+    }
+
+    await ctx.db.patch(args.siteId, patch);
     return null;
   },
 });
@@ -117,16 +140,34 @@ export const syncBatch = internalAction({
       await Promise.all(
         slice.map(async (site) => {
           try {
-            const staging = await fetchPhpVersion(token, site.stagingId);
+            const staging = await probeSite(token, site.stagingId);
             const production = site.productionId
-              ? await fetchPhpVersion(token, site.productionId)
+              ? await probeSite(token, site.productionId)
               : undefined;
+
+            // The row is a staging/production pair. It only counts as missing
+            // when every environment it has 404s; a single auth failure is a
+            // token problem, not a deleted site.
+            const statuses = [staging.status, ...(production ? [production.status] : [])];
+            const rocketStatus: RocketStatus = statuses.every((s) => s === "missing")
+              ? "missing"
+              : statuses.some((s) => s === "auth_error")
+                ? "auth_error"
+                : "ok";
+
             await ctx.runMutation(internal.phpVersions.setPhpVersions, {
               siteId: site._id as any,
-              phpVersion: staging,
-              productionPhpVersion: production,
+              phpVersion: staging.version,
+              productionPhpVersion: production?.version,
+              rocketStatus,
             });
-            checked++;
+            if (rocketStatus === "ok") checked++;
+            else {
+              errors++;
+              console.error(
+                `PHP version sync: ${site.productionDomain} is ${rocketStatus} on Rocket.net`,
+              );
+            }
           } catch (e) {
             errors++;
             console.error(

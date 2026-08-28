@@ -1,6 +1,8 @@
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { PhpVersionBadge } from "@/components/PhpVersionBadge";
+import { RocketStatusBadge } from "@/components/RocketStatusBadge";
+import { MissingFromRocketNotice } from "@/components/MissingFromRocketNotice";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -401,6 +403,14 @@ export default function SiteDetailPage() {
             }
           : null
       }
+      notice={
+        <MissingFromRocketNotice
+          siteId={site._id}
+          status={site.rocketStatus}
+          missingSince={site.rocketMissingSince}
+          domain={site.productionDomain}
+        />
+      }
       titleBadge={<StatusBadgeLarge status={site.status} />}
       metadata={
         <>
@@ -409,6 +419,7 @@ export default function SiteDetailPage() {
           </span>
           <span className="flex items-center gap-1.5">
             <PhpVersionBadge version={site.phpVersion} checkedAt={site.phpCheckedAt} />
+          <RocketStatusBadge status={site.rocketStatus} missingSince={site.rocketMissingSince} />
             {site.phpVersion && site.productionPhpVersion && site.phpVersion !== site.productionPhpVersion && (
               <span
                 className="text-xs text-amber-600"
@@ -426,7 +437,7 @@ export default function SiteDetailPage() {
           )}
         </>
       }
-      syncLabel="Scan Plugins"
+      syncLabel="Sync"
       syncingLabel="Syncing..."
       onSync={handleSyncDetail}
       isSyncing={syncing}

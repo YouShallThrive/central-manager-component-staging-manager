@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Loader2, ShieldOff, CheckCircle2, Cpu, AlertTriangle } from "lucide-react";
 import { PhpVersionBadge, matchesPhpFilter, PHP_FILTER_OPTIONS, PHP_FILTER_ALL_LABEL } from "@/components/PhpVersionBadge";
+import { RocketStatusBadge, matchesRocketFilter, ROCKET_FILTER_OPTIONS, ROCKET_FILTER_ALL_LABEL } from "@/components/RocketStatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,8 @@ const fieldAccessors: SiteFieldAccessors<SiteDoc> = {
   getSecondaryPhpVersion: (site) => site.productionPhpVersion,
   secondaryPhpLabel: "live",
   getPhpCheckedAt: (site) => site.phpCheckedAt,
+  getRocketStatus: (site) => site.rocketStatus,
+  getRocketMissingSince: (site) => site.rocketMissingSince,
 };
 
 /* ── Extra column: Status (staging-specific) ── */
@@ -72,6 +75,7 @@ export default function DashboardPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [accountFilter, setAccountFilter] = useState<string>("all");
   const [phpFilter, setPhpFilter] = useState<string>("all");
+  const [rocketFilter, setRocketFilter] = useState<string>("all");
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   // Track which sites are currently being deactivated (by site _id)
   const [deactivating, setDeactivating] = useState<Set<string>>(new Set());
@@ -259,9 +263,12 @@ export default function DashboardPage() {
 
   const visibleSites = useMemo(() => {
     if (!sites) return undefined;
-    if (phpFilter === "all") return sites;
-    return sites.filter((s) => matchesPhpFilter(s.phpVersion, phpFilter));
-  }, [sites, phpFilter]);
+    let out = sites;
+    if (phpFilter !== "all") out = out.filter((s) => matchesPhpFilter(s.phpVersion, phpFilter));
+    if (rocketFilter !== "all")
+      out = out.filter((s) => matchesRocketFilter(s.rocketStatus, rocketFilter));
+    return out;
+  }, [sites, phpFilter, rocketFilter]);
 
   const extraFilters: ExtraFilter[] = useMemo(() => [
     {
@@ -285,7 +292,15 @@ export default function DashboardPage() {
       onChange: setPhpFilter,
       width: "w-[170px]",
     },
-], [statusFilter, phpFilter]);
+    {
+      key: "rocket",
+      allLabel: ROCKET_FILTER_ALL_LABEL,
+      options: ROCKET_FILTER_OPTIONS,
+      value: rocketFilter,
+      onChange: setRocketFilter,
+      width: "w-[210px]",
+    },
+], [statusFilter, phpFilter, rocketFilter]);
 
   // Per-row "Deactivate All" button
   const renderRowAction = useCallback((site: SiteDoc) => {
