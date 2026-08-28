@@ -662,7 +662,7 @@ export default function SiteDetailPage() {
         <div className="rounded-lg border p-8 text-center">
           <Plug className="size-8 text-muted-foreground/50 mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
-            No plugin data yet. Click "Scan Plugins" to fetch plugin information.
+            No plugin data yet. Click "Sync" to fetch plugin information.
           </p>
         </div>
       )}
