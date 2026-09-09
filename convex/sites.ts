@@ -47,6 +47,8 @@ const siteReturnValidator = v.object({
   phpVersion: v.optional(v.string()),
   productionPhpVersion: v.optional(v.string()),
   phpCheckedAt: v.optional(v.number()),
+  rocketStatus: v.optional(v.string()),
+  rocketMissingSince: v.optional(v.number()),
 });
 
 // List all sites with optional filtering
