@@ -187,12 +187,13 @@ export const checkAllSync = action({
       if (webhookUrl) {
         try {
           const domainList = outOfSyncDomains.slice(0, 20).map((d) => `• ${d}`).join("\n");
+          const appUrl = process.env.APP_URL || "https://central.ystvps.com";
           const text =
             `🔄 *Staging Sync Alert*\n` +
             `${outOfSync} of ${checked} staging site${outOfSync > 1 ? "s are" : " is"} out of sync with production:\n\n` +
             `${domainList}` +
             (outOfSyncDomains.length > 20 ? `\n...and ${outOfSyncDomains.length - 20} more` : "") +
-            `\n\n<https://staging-manager-35589294.viktor.space/dashboard|View Dashboard>`;
+            `\n\n<${appUrl}/dashboard|View Dashboard>`;
 
           await fetch(webhookUrl, {
             method: "POST",
