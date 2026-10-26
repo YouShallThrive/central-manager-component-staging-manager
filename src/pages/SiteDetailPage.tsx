@@ -539,10 +539,7 @@ export default function SiteDetailPage() {
                 size="sm"
                 className="h-7 text-xs gap-1.5 border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/40"
                 onClick={() => {
-                  const isPreview = window.location.hostname.startsWith("preview-");
-                  const baseUrl = isPreview
-                    ? "https://preview-wp-updates-dashboard-77490250.viktor.space"
-                    : "https://wp-updates-dashboard-77490250.viktor.space";
+                  const baseUrl = import.meta.env.VITE_WP_UPDATES_URL || "https://central.ystvps.com";
                   window.open(
                     `${baseUrl}/sites/by-rocket/${site.stagingId}?scan=true`,
                     "_blank",

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const SERVER_MANAGEMENT_URL = import.meta.env.VITE_SERVER_MANAGEMENT_URL || "https://preview-server-management-8973432e.viktor.space";
+const SERVER_MANAGEMENT_URL = import.meta.env.VITE_SERVER_MANAGEMENT_URL || "https://central.ystvps.com";
 
 type Account = {
   _id: string;

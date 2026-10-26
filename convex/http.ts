@@ -18,7 +18,7 @@ http.route({
       const body = await request.json();
       const { serverManagementUrl, ssoSharedSecret, adminKey } = body;
 
-      const secret = process.env.SSO_SHARED_SECRET || "66mTA4FYT1TTYfuD6FC7eDHLN15vZC7T3L6DLz3tqbk";
+      const secret = process.env.SSO_SHARED_SECRET;
       if (!adminKey || adminKey !== secret) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 403,
