@@ -8,7 +8,9 @@ const accountValidator = v.object({
   _id: v.id("rocketAccounts"),
   _creationTime: v.number(),
   label: v.string(),
-  apiToken: v.string(),
+  hasToken: v.boolean(),
+  tokenPreview: v.optional(v.string()),
+  apiToken: v.optional(v.string()),
   status: v.union(
     v.literal("connected"),
     v.literal("error"),
@@ -47,8 +49,8 @@ export const list = query({
       _id: a._id,
       _creationTime: a._creationTime,
       label: a.label,
-      hasToken: !!a.apiToken,
-      tokenPreview: a.apiToken ? `…${a.apiToken.slice(-8)}` : "",
+      hasToken: a.hasToken ?? !!a.apiToken,
+      tokenPreview: a.tokenPreview ?? (a.apiToken ? `…${a.apiToken.slice(-8)}` : ""),
       status: a.status,
       siteCount: a.siteCount,
       stagingSiteCount: a.stagingSiteCount,
@@ -97,6 +99,8 @@ export const add = mutation({
     return await ctx.db.insert("rocketAccounts", {
       label: args.label,
       apiToken: args.apiToken,
+      hasToken: !!args.apiToken,
+      tokenPreview: args.apiToken ? `…${args.apiToken.slice(-8)}` : undefined,
       status: "connected",
     });
   },
@@ -125,6 +129,8 @@ export const updateToken = mutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
       apiToken: args.apiToken,
+      hasToken: !!args.apiToken,
+      tokenPreview: args.apiToken ? `…${args.apiToken.slice(-8)}` : undefined,
       status: "connected",
       lastError: undefined,
     });

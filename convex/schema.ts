@@ -8,7 +8,11 @@ const schema = defineSchema({
   // Rocket.net hosting accounts (supports multiple)
   rocketAccounts: defineTable({
     label: v.string(), // Display name, e.g. "YST Main", "Lucid"
-    apiToken: v.string(), // JWT bearer token
+    // Token-hygiene (prod parity): raw token internal-only; public rows carry
+    // hasToken + tokenPreview (matching the imported prod snapshot).
+    hasToken: v.boolean(),
+    tokenPreview: v.optional(v.string()),
+    apiToken: v.optional(v.string()), // JWT bearer token
     status: v.union(
       v.literal("connected"),
       v.literal("error"),
