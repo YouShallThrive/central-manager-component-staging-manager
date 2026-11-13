@@ -790,7 +790,7 @@ export default function SiteManagerTemplate<T>(props: SiteManagerConfig<T>) {
       )}
 
       {/* Sites Table */}
-      <div className="rounded-lg border bg-card overflow-hidden">
+      <div className="rounded-lg border bg-card overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/30">
@@ -827,7 +827,7 @@ export default function SiteManagerTemplate<T>(props: SiteManagerConfig<T>) {
                 </th>
               ))}
               {renderRowAction && (
-                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="py-2.5 px-4 whitespace-nowrap text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               )}
@@ -893,7 +893,7 @@ export default function SiteManagerTemplate<T>(props: SiteManagerConfig<T>) {
                       </td>
                     ))}
                     {renderRowAction && (
-                      <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
+                      <td className="py-3 px-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         {renderRowAction(site)}
                       </td>
                     )}
