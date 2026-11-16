@@ -61,7 +61,13 @@ export const pullFromServerManagement = internalAction({
       }
 
       const data = (await resp.json()) as { credentials: Credential[] };
-      const remoteCredentials = data.credentials ?? [];
+      // Only Rocket.net credentials belong in rocketAccounts. Server Management
+      // also exposes Cloudways (and others); those tokens are not valid against
+      // Rocket's API and would 401 on every sync, overwriting the progress row
+      // with a misleading "401 from Rocket.net" error.
+      const remoteCredentials = (data.credentials ?? []).filter(
+        (c) => (c.provider ?? "").toLowerCase() === "rocket",
+      );
 
       // Get current local accounts
       const localAccounts = await ctx.runQuery(internal.rocketAccounts.listAll, {});
